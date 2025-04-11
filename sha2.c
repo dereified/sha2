@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include "sha2.h"
@@ -250,7 +251,7 @@ void sha2_more(struct sha2_ctx_t *ctx, uint8_t *data, int len) {
 static int sha2_finish_main(struct sha2_ctx_t *ctx, uint8_t *out, int maxlen) {
     int i, half_here, space_needed, len_len, block_size,bits,len;
     signed int pad_length;
-    uint8_t terminal[128],*len_pos;
+    uint8_t terminal[SHA2_MAX_BLOCK_LENGTH*2],*len_pos;
 
     bits = ctx->variety->bits;
     block_size = 2*bits;
@@ -260,7 +261,7 @@ static int sha2_finish_main(struct sha2_ctx_t *ctx, uint8_t *out, int maxlen) {
     if(pad_length<0) { /* Oops, add a block */
         pad_length += block_size;
     }
-    memset(terminal,0,128);
+    memset(terminal,0,SHA2_MAX_BLOCK_LENGTH*2);
     terminal[0] = 0x80;
     len_pos = terminal + pad_length + 1; /* gets clobbered by be_unpack */
     be_unpack(ctx->length*8,&len_pos,len_len,len_len,NULL);

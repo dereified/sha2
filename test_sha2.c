@@ -65,10 +65,26 @@ static void test_trunc() {
     printf("ok test-trunc\n");
 }
 
+#define MAX_LEN 1000
+static void test_lengths() { /* Only useful with valgrind */
+    struct sha2_ctx_t ctx;
+    uint8_t text[MAX_LEN],out[SHA2_MAX_DIGEST_SIZE];
+    int len;
+
+    memset(text,42,MAX_LEN);
+    for(len=0;len<1000;len++) {
+        sha2_init(&ctx,SHA2_VARIETY_512);
+        sha2_more(&ctx,text,len);
+        sha2_finish(&ctx,out,SHA2_MAX_DIGEST_SIZE);
+    }
+}
+
+
 int main() {
     char *dog = "The quick brown fox jumps over the lazy dog";
     char *k = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz";
 
+    printf("Run me under valgrind too!\n");
     compare("empty-512",SHA2_VARIETY_512,"","cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",NULL);
     compare("empty-384",SHA2_VARIETY_384,"","38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b",NULL);
     compare("empty-256",SHA2_VARIETY_256,"","e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",NULL);
@@ -81,6 +97,8 @@ int main() {
     compare("dog-224",SHA2_VARIETY_224,dog,"730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525",NULL);
     compare("hmac-512",SHA2_VARIETY_512,dog,"2a31d580d74d604de3dce055477d0a5633411adeafa044e10a2c6cfee6e38df49ed336cb53e3e7fa6bbbf3f107a3067296560be3deb09afcaff9cb98d2169433",k);
     compare("hmac-224",SHA2_VARIETY_224,dog,"610d38da56e06cf7d15bdf1ad83e250ae77ada28b5648036bba614ee",k);
+    //compare("overrun-512",SHA2_VARIETY_512,"abcdefghi","",NULL);
+    test_lengths();
     test_trunc();
     return 0;
 }
