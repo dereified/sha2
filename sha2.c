@@ -316,7 +316,6 @@ static void derive_key(uint8_t *out, int sha2_variety, uint8_t *key, int key_len
         sha2_finish(&ctx,out,SHA2_MAX_BLOCK_LENGTH);
     } else {
         memcpy(out,key,key_len);
-        memset(out+key_len,0,block_size-key_len);
     }
 }
 
