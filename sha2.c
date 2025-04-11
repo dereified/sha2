@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #include "sha2.h"
@@ -249,25 +248,22 @@ void sha2_more(struct sha2_ctx_t *ctx, uint8_t *data, int len) {
 }
 
 static int sha2_finish_main(struct sha2_ctx_t *ctx, uint8_t *out, int maxlen) {
-    int i,space_bytes,half_here,space_needed,len_bytes,len_offset,
-        block_size,bits,len;
+    int i, half_here, space_needed, len_len, block_size,bits,len;
     signed int pad_length;
     uint8_t terminal[128],*len_pos;
 
     bits = ctx->variety->bits;
     block_size = 2*bits;
-    len_bytes = bits/4; /* 32 => 8; 64 => 16 */
-    space_bytes = block_size - ctx->pending_len;
-    space_needed = 1 + len_bytes;
-    pad_length = space_bytes - space_needed;
-    if(pad_length<0) {
+    len_len = bits/4; /* Length of length field: 32bit => 8by; 64bit => 16by */
+    space_needed = 1 + len_len; /* Need room for 0x80 and the length field */
+    pad_length = block_size - ctx->pending_len - space_needed;
+    if(pad_length<0) { /* Oops, add a block */
         pad_length += block_size;
     }
     memset(terminal,0,128);
     terminal[0] = 0x80;
-    len_offset = 1 + pad_length;
-    len_pos = terminal+len_offset;
-    be_unpack(ctx->length*8,&len_pos,len_bytes,len_bytes,NULL);
+    len_pos = terminal + pad_length + 1; /* gets clobbered by be_unpack */
+    be_unpack(ctx->length*8,&len_pos,len_len,len_len,NULL);
     sha2_more(ctx,terminal,space_needed + pad_length);
     len = 0;
     for(i=0;i<ctx->variety->words_out;i++) {
