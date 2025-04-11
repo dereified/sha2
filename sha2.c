@@ -88,6 +88,7 @@ uint64_t sha512_k[80] = {
  *     m: only written by
  *          a. memcpy len=56 at pointer offset 1. Is 8*64-bits, so at offset 1 
  *             there's 7*64-bits, = 56 bytes.
+ *          b. at indexes 0 and 4 which are less than its size.
  * 
  * (2) pad_length is at most SHA2_MAX_BLOCK_LEN. It is calculated by taking
  *     block_size and subtracting positives. If this is greater than zero,
