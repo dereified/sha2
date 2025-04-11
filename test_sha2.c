@@ -97,7 +97,6 @@ int main() {
     compare("dog-224",SHA2_VARIETY_224,dog,"730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525",NULL);
     compare("hmac-512",SHA2_VARIETY_512,dog,"2a31d580d74d604de3dce055477d0a5633411adeafa044e10a2c6cfee6e38df49ed336cb53e3e7fa6bbbf3f107a3067296560be3deb09afcaff9cb98d2169433",k);
     compare("hmac-224",SHA2_VARIETY_224,dog,"610d38da56e06cf7d15bdf1ad83e250ae77ada28b5648036bba614ee",k);
-    //compare("overrun-512",SHA2_VARIETY_512,"abcdefghi","",NULL);
     test_lengths();
     test_trunc();
     return 0;

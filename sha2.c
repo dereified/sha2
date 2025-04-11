@@ -82,6 +82,29 @@ uint64_t sha512_k[80] = {
     0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 };
 
+/* Stack allocated buffer non-overrun audits:
+ * (1) w: only accessed by loop-index i, which never exceeds size of w[]
+ *     j: only written by memcpy len=64; is 8*64-bits = 64 bytes
+ *     m: only written by
+ *          a. memcpy len=56 at pointer offset 1. Is 8*64-bits, so at offset 1 
+ *             there's 7*64-bits, = 56 bytes.
+ * 
+ * (2) pad_length is at most SHA2_MAX_BLOCK_LEN. It is calculated by taking
+ *     block_size and subtracting positives. If this is greater than zero,
+ *     this is <= SHA2_MAX_BLOCK_LEN. If less than zero, block_size is
+ *     added to negative, therefore also <SHA2_MAX_BLOCK_LEN. length is written
+ *     at pad_length + 1, ie at most SHA2_MAX_BLOCK_LEN+1. len_len is at most
+ *     16 bytes, (bits=64)/4. ie ends at at most SHA2_MAX_BLOCK_LEN+17. 17 <
+ *     SHA2_MAX_BLOCK_LEN, ie total length < 2*SHA2_MAX_BLOCK_LEN.
+ * 
+ * (3) written by memcpy, xor_blit, and sha2_finish_main. First two have len
+ *     of block_size <= SHA2_MAX_BLOCK_LEN; last uses SHA2_MAX_BLOCK_LEN as
+ *     limit.
+ * 
+ * (4) written by memcpy, xor_blit, which use block_size <= SHA2_MAX_BLOCK_LEN
+ *     as limit.
+ */
+
 static inline int min(int a,int b) { return a<b?a:b; }
 
 static inline uint32_t rot32(uint32_t v, int amt) {
@@ -168,7 +191,7 @@ static inline uint64_t shr32(uint64_t in, int amt) {
 }
 
 static void hash32(struct sha2_ctx_t *ctx) {
-    uint64_t j[8],m[8],w[64],s0,s1,t1;
+    uint64_t j[8],m[8],w[64],s0,s1,t1; /* (1) */
     uint8_t *src;
     int i;
 
@@ -196,7 +219,7 @@ static void hash32(struct sha2_ctx_t *ctx) {
 }
 
 static void hash64(struct sha2_ctx_t *ctx) {
-    uint64_t w[80],j[8],m[8],t1,s0,s1;
+    uint64_t w[80],j[8],m[8],t1,s0,s1; /* (1) */
     uint8_t *src;
     int i;
 
@@ -251,7 +274,7 @@ void sha2_more(struct sha2_ctx_t *ctx, uint8_t *data, int len) {
 static int sha2_finish_main(struct sha2_ctx_t *ctx, uint8_t *out, int maxlen) {
     int i, half_here, space_needed, len_len, block_size,bits,len;
     signed int pad_length;
-    uint8_t terminal[SHA2_MAX_BLOCK_LENGTH*2],*len_pos;
+    uint8_t terminal[SHA2_MAX_BLOCK_LENGTH*2],*len_pos; /* (2) */
 
     bits = ctx->variety->bits;
     block_size = 2*bits;
@@ -283,7 +306,7 @@ static void xor_blit(uint8_t *data, int v, int n) {
 }
 
 int sha2_finish(struct sha2_ctx_t *ctx, uint8_t *out, int max_len) {
-    uint8_t tmp[SHA2_MAX_BLOCK_LENGTH];
+    uint8_t tmp[SHA2_MAX_BLOCK_LENGTH]; /* (3) */
     struct sha2_ctx_t outer;
     int block_size,len;
 
@@ -318,7 +341,7 @@ static void derive_key(uint8_t *out, int sha2_variety, uint8_t *key, int key_len
 
 void sha2_init_hmac(struct sha2_ctx_t *ctx, int sha2_variety,
                     uint8_t *key, int key_len) {
-    uint8_t i_pad[SHA2_MAX_BLOCK_LENGTH];
+    uint8_t i_pad[SHA2_MAX_BLOCK_LENGTH]; /* (4) */
     int block_size;
 
     block_size = block_length(&sha2_variety_def[sha2_variety]);
