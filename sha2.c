@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#include "sha2.h"
 
 uint64_t sha256_h_init[8] = {
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -81,8 +82,6 @@ uint64_t sha512_k[80] = {
     0x5fcb6fab3ad6faec, 0x6c44198c4a475817
 };
 
-#define SHA2_MAX_BLOCK_LENGTH 128
-
 static inline int min(int a,int b) { return a<b?a:b; }
 
 static inline uint32_t rot32(uint32_t v, int amt) {
@@ -125,31 +124,6 @@ static inline int be_unpack(uint64_t in, uint8_t **out, int n_in, int n_out,
 
 #define FLAG_HALFWORD 1  /* Curse you, 512-224 */
 #define FLAG_HMAC     2
-
-struct sha2_variety_t {
-    uint64_t *iv;
-    int bits,words_out;
-    int v_flags;
-};
-
-struct sha2_ctx_t {
-    int variety_idx;
-    struct sha2_variety_t *variety;
-    uint64_t h64[8];
-    uint8_t pending[SHA2_MAX_BLOCK_LENGTH];
-    int pending_len;
-    uint64_t length;
-    int flags;
-    uint8_t k_prime[SHA2_MAX_BLOCK_LENGTH]; /* For HMAC */
-};
-
-#define SHA2_VARIETY_224 0
-#define SHA2_VARIETY_256 1
-#define SHA2_VARIETY_384 2
-#define SHA2_VARIETY_512 3
-#define SHA2_VARIETY_512_256 4
-#define SHA2_VARIETY_512_224 5
-#define SHA2_VARIETY_END 6
 
 struct sha2_variety_t sha2_variety_def[SHA2_VARIETY_END] = {
     {sha224_h_init,32,7,0},  /* SHA224 */
