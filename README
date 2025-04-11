@@ -1,4 +1,0 @@
-This is a small, simple implementation of the various SHA2 varieties,
-including HMAC versions. It's probably not as quick as other implementations,
-but it's in the public domain, has a simple API, has tests, and is a singlefile of under 400 lines.
-
